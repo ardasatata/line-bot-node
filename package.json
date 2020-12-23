@@ -1,0 +1,17 @@
+{
+  "name": "line-bot-node",
+  "version": "1.0.0",
+  "description": "bot line test",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ."
+  },
+  "author": "Arda Satata",
+  "license": "ISC",
+  "dependencies": {
+    "@line/bot-sdk": "^7.2.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1"
+  }
+}
