@@ -1,5 +1,5 @@
 // Import all dependencies, mostly using destructuring for better view.
-import { ClientConfig, Client, middleware, MiddlewareConfig, WebhookEvent, TextMessage, MessageAPIResponseBase } from '@line/bot-sdk';
+import { ClientConfig, Client, middleware, MiddlewareConfig, WebhookEvent, TextMessage, MessageAPIResponseBase, TextEventMessage } from '@line/bot-sdk';
 import express, { Application, Request, Response } from 'express';
 
 // Setup all LINE client and Express configurations.
@@ -23,6 +23,9 @@ const app: Application = express();
 
 // Function handler to receive the text.
 const textEventHandler = async (event: WebhookEvent): Promise<MessageAPIResponseBase | undefined> => {
+
+  console.log(event)
+
   // Process all variables here.
   if (event.type !== 'message' || event.message.type !== 'text') {
     return;
@@ -90,6 +93,25 @@ app.post(
     });
   }
 );
+
+app.get('/send-message', ()=>{
+
+  const textEventMessage : TextEventMessage = {
+    id: '0',
+    text: 'halo semua',
+    type: 'text'
+  }
+
+  const { text } = textEventMessage
+
+  // Create a new message.
+  const response: TextMessage = {
+    type: 'text',
+    text,
+  };
+
+  return client.broadcast(response)
+})
 
 // Create a server and listen to it.
 app.listen(PORT, () => {
