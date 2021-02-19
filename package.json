@@ -1,17 +1,22 @@
 {
-  "name": "line-bot-node",
-  "version": "1.0.0",
-  "description": "bot line test",
-  "main": "index.js",
+  "name": "echo-bot-ts",
+  "version": "0.0.0",
+  "description": "An example LINE bot with TypeScript made to echo messages",
+  "main": "./dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node ."
+    "clean": "rimraf ./dist",
+    "build": "npm run clean && tsc",
+    "start": "node dist/index.js"
   },
-  "author": "Arda Satata",
-  "license": "ISC",
+  "author": "Nicholas Dwiarto <nicholasdwiarto@yahoo.com> (https://nicholasdw.com)",
   "dependencies": {
     "@line/bot-sdk": "^7.2.0",
-    "dotenv": "^8.2.0",
     "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.9",
+    "@types/node": "^14.14.14",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.1.3"
   }
 }
