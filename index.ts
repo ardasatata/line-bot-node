@@ -5,9 +5,6 @@ import moment from 'moment';
 
 const schedule = require('node-schedule');
 
-// Create a new Express application.
-const app: Application = express();
-
 const PORT = process.env.PORT || 3000;
 
 /*
@@ -27,6 +24,9 @@ const middlewareConfig: MiddlewareConfig = {
 
 // // Create a new LINE SDK client.
 const client = new Client(clientConfig);
+
+// Create a new Express application.
+const app: Application = express();
 
 // // Function handler to receive the text.
 const textEventHandler = async (event: WebhookEvent): Promise<MessageAPIResponseBase | undefined> => {
@@ -53,9 +53,20 @@ const textEventHandler = async (event: WebhookEvent): Promise<MessageAPIResponse
 };
 
 // Register the LINE middleware.
-
 // As an alternative, you could also pass the middleware in the route handler, which is what is used here.
-app.use(middleware(middlewareConfig));
+// app.use(middleware(middlewareConfig));
+
+// Route handler to receive webhook events.
+// This route is used to receive connection tests.
+app.get(
+  '/',
+  async (_: Request, res: Response): Promise<Response> => {
+    return res.status(200).json({
+      status: 'success',
+      message: 'Connected successfully!',
+    });
+  }
+);
 
 // This route is used for the Webhook.
 app.post(
@@ -92,18 +103,6 @@ app.post(
 /*
  * LINE CONFIG END
  */
-
-// Route handler to receive webhook events.
-// This route is used to receive connection tests.
-app.get(
-  '/',
-  async (_: Request, res: Response): Promise<Response> => {
-    return res.status(200).json({
-      status: 'success',
-      message: 'Connected successfully!',
-    });
-  }
-);
 
 
 const GROUP_LIST = [
