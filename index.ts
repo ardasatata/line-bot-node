@@ -94,7 +94,7 @@ app.post(
       events.map(async (event: WebhookEvent) => {
         try {
           // echo tester all event
-          await textEventHandler(event);
+          // await textEventHandler(event);
 
           // group message handler
           if(event.source.type=='group'){
