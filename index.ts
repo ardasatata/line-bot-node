@@ -388,7 +388,7 @@ const checkGroupId = async (event: WebhookEvent) => {
   let response:TextMessage;
 
   // @ts-ignore
-  const getGroupData = db.collection("Groups").doc(event.source.groupId).get().then( returnData =>{
+  const getGroupData = await db.collection("Groups").doc(event.source.groupId).get().then( returnData =>{
     if (returnData.exists){
       // @ts-ignore
       var groupName = returnData.data().groupName
@@ -413,11 +413,11 @@ const checkGroupId = async (event: WebhookEvent) => {
 
       response = res;
     }
-
     console.log(response)
+    console.log(replyToken)
     client.replyMessage(replyToken, response)
-    return null
   }).catch(err => {
+      console.log('error get group data')
       console.log(err)
   })
 }
