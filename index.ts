@@ -1,11 +1,28 @@
+require('dotenv').config()
 // Import all dependencies, mostly using destructuring for better view.
 import { ClientConfig, Client, middleware, MiddlewareConfig, WebhookEvent, TextMessage, MessageAPIResponseBase, TextEventMessage } from '@line/bot-sdk';
 import express, { Application, Request, Response } from 'express';
 import moment from 'moment';
+import * as admin from 'firebase-admin'; // Firebase Imports
 
 const schedule = require('node-schedule');
 
+// Config PORT
 const PORT = process.env.PORT || 3000;
+
+// Create a new Express application.
+const app: Application = express();
+
+// Firebase Init
+admin.initializeApp({
+  credential: admin.credential.cert({
+    "projectId": process.env.FIREBASE_PROJECT_ID,
+    "privateKey": process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    "clientEmail": process.env.FIREBASE_CLIENT_EMAIL,
+  })
+});
+
+const db = admin.firestore();
 
 /*
  * LINE CONFIG START
@@ -24,9 +41,6 @@ const middlewareConfig: MiddlewareConfig = {
 
 // // Create a new LINE SDK client.
 const client = new Client(clientConfig);
-
-// Create a new Express application.
-const app: Application = express();
 
 // // Function handler to receive the text.
 const textEventHandler = async (event: WebhookEvent): Promise<MessageAPIResponseBase | undefined> => {
@@ -79,7 +93,15 @@ app.post(
     const results = await Promise.all(
       events.map(async (event: WebhookEvent) => {
         try {
+          // echo tester all event
           await textEventHandler(event);
+
+          // group message handler
+          if(event.source.type=='group'){
+            console.log('this is message group')
+            await checkGroupId(event);
+          }
+
         } catch (err: unknown) {
           if (err instanceof Error) {
             console.error(err);
@@ -264,6 +286,50 @@ const startReminder = (name: string, timeValue: number, groupId: string, locatio
           await client.pushMessage(groupId, response)
           await console.log(response);
       });
+}
+
+// const textEventHandler = async (event: WebhookEvent): Promise<MessageAPIResponseBase | undefined> => {
+
+const checkGroupId = async (event: WebhookEvent) => {
+
+    // @ts-ignore
+  const { replyToken } = event;
+
+  let response:TextMessage;
+
+  // @ts-ignore
+  const getGroupData = await db.collection("Groups").doc(event.source.groupId).get().then( returnData =>{
+    if (returnData.exists){
+      // @ts-ignore
+      var groupName = returnData.data().groupName
+      // @ts-ignore
+      var location = returnData.data().location
+
+      // Create a new message.
+      const res: TextMessage = {
+        type: 'text',
+        text: `${groupName} ${location}`,
+      };
+
+      response = res;
+
+    } else {
+
+      // Create a new message.
+      const res: TextMessage = {
+        type: 'text',
+        text: `You are not registed yet`,
+      };
+
+      response = res;
+    }
+    return null
+  }).catch(err => {
+      console.log(err)
+  }).then(()=>{
+    console.log(response)
+    client.replyMessage(replyToken, response)
+  })
 }
 
 // Create a server and listen to it.
