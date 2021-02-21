@@ -5,6 +5,7 @@ import express, { Application, Request, Response } from 'express';
 import moment from 'moment';
 import * as admin from 'firebase-admin'; // Firebase Imports
 import { group } from 'console';
+import axios, { AxiosResponse } from 'axios'
 
 const schedule = require('node-schedule');
 
@@ -97,21 +98,23 @@ app.post(
           // echo tester all event
           // await textEventHandler(event);
 
+          //@ts-ignore
+          const { replyToken } = event;
+
+          //@ts-ignore
+          const { text } = event.message;
+
+          const textSplit = text.split(" ");
+          const command = textSplit[0];
+
+          let response:TextMessage;
+
           // group message handler
           if(event.source.type=='group'){
             console.log('this is message type group only')
-            let response:TextMessage;
 
-            //@ts-ignore
-            const { replyToken } = event;
-
-            //@ts-ignore
-            const { text } = event.message;
-
-            const textSplit = text.split(" ");
-            const command = textSplit[0];
-
-            // eg: /register zhongli Musholla-1
+            // command : /register [city] [country] [group-name]
+            //       eg: /register zhongli taiwan Musholla-1
             if(command==='/register'){
               console.log('register command')
               console.log(`location ${textSplit[1]}, group name ${textSplit[2]}`)
@@ -119,7 +122,9 @@ app.post(
               const groupItem:GroupItemsType = {
                 id: event.source.groupId,
                 location: textSplit[1],
-                name: textSplit[2]
+                country: textSplit[2],
+                name: textSplit[3],
+                isActive: true
               }
             
               const addNewGroup = await registerNewGroup(groupItem)
@@ -128,19 +133,48 @@ app.post(
                 // Create a new message.
                 response = {
                   type: 'text',
-                  text: `Data Updated. \n
-                         id : ${groupItem.id}\n
-                         location : ${groupItem.location}\n
-                         groupName : ${groupItem.name}`,
+                  text: `Group Registered, id : ${groupItem.id}, location : ${groupItem.location}, country : ${groupItem.country} groupName : ${groupItem.name}`,
                 };
                 console.log(response)
                 console.log(replyToken)
                 client.replyMessage(replyToken, response)
               }
-
-            }else if(command==='/check'){
+            }
+            else if(command==='/check'){
               checkGroupId(event);
             }
+            else if(command==='/pause'){
+              console.log(command)
+            }
+          }
+          // eg: /schedule [city] [country]
+          // eg: /schedule zhongli taiwan
+          else if(command==='/schedule'){
+            const city = textSplit[1];
+            const country = textSplit[2];
+            console.log(`get schedule for ${city}, ${country}`)
+
+            //@ts-ignore
+            const todaySchedule: Array<any> = await getPrayerScheduleToday(city, country)
+            //@ts-ignore
+            const timings = todaySchedule.timings;
+
+            console.log(timings.Fajr)
+
+            response = {
+              type: 'text',
+              text: 
+                `Today Prayer Times for ${city},${country}\n
+                Fajr : ${timings.Fajr}\n
+                Sunrise : ${timings.Sunrise}\n
+                Dhur : ${timings.Dhur}\n
+                Asr : ${timings.Asr}\n
+                Maghrib : ${timings.Maghrib}\n
+                Isha : ${timings.Isha}\n`,
+            };
+            console.log(response)
+            console.log(replyToken)
+            client.replyMessage(replyToken, response)
 
           }
 
@@ -169,15 +203,29 @@ app.post(
  */
 
 
-const GROUP_LIST = [
-  'C048ee0720fddc0f9e107e6ffa7bc7f28',
-  'Cdbd57fd622114d68bab8ec8a0062faef'
+const GROUPS_EXAMPLE: Array<GroupItemsType> = [
+  {
+    id: "C048ee0720fddc0f9e107e6ffa7bc7f28",
+    location: 'zhongli',
+    country: 'taiwan',
+    name: 'Musholla al mudhorot',
+    isActive: true
+  },
+  {
+    id: "Cdbd57fd622114d68bab8ec8a0062faef",
+    location: 'malang',
+    country: 'indonesia',
+    name: 'Musholla al siswanto',
+    isActive: true
+  }
 ]
 
 type GroupItemsType = {
   id: string;
   location: string;
+  country: string;
   name?: string;
+  isActive: boolean;
 }
 
 type DailyReminderType = {
@@ -368,34 +416,53 @@ app.get('/test', async (req: Request, res: Response): Promise<Response> =>{
   });
 })
 
-app.get('/test2', async (req: Request, res: Response): Promise<Response> =>{
+app.get('/test-api', async (req: Request, res: Response): Promise<Response> =>{
 
-  const groupItem:GroupItemsType = {
-    id: "C048ee0720fddc0f9e107e6ffa7bc7f28",
-    location: 'zhongli',
-    name: 'Musholla Al-Mudhorot'
-  }
+  //@ts-ignore
+  const response: Array<any> = await getPrayerScheduleToday('zhongli', 'taiwan')
+  //@ts-ignore
+  const timings = response.timings;
 
-  const addNewGroup = await registerNewGroup(groupItem)
+  console.log(timings.Fajr)
 
-  if(addNewGroup){
-    return res.status(200).json({
-      status: 'success',
-      response: 'Yeay'
-    });
-  }
-  
   return res.status(200).json({
     status: 'success',
-    response: 'jancok'
+    response
   });
 })
 
-const startReminder = (name: string, timeValue: number, groupId: string, location: string) => {
+const getPrayerScheduleToday = async (location: string, country: string) => {
+
+  let prayerTimeData: AxiosResponse<any>;
+  let today = moment().get('date') - 1 // date to array index 
+
+  return axios.get("http://api.aladhan.com/v1/calendarByCity", {
+    params: {
+      city: 'zhongli',
+      country: 'taiwan',
+      method: 2,
+      month: moment().month() + 1,
+      year: moment().year()
+    }
+  })
+  .then(function (response) {
+    prayerTimeData = response.data.data
+  })
+  .catch(function (error) {
+    console.log(error);
+  })
+  .then(function () {
+    // console.log(prayerTimeData);
+    //@ts-ignore
+    return prayerTimeData[today];
+  }); 
+}
+
+const startReminder = (prayerName: string, timeValue: number, groupId: string, location: string) => {
 
   const response: TextMessage = {
     type: 'text',
-    text: `It's time to ${name.toUpperCase()} in ${location.toUpperCase()}, Time : ${new Date(timeValue * 1000)}`
+    text: `It's time to ${prayerName.toUpperCase()} in ${location.toUpperCase()}, Time : ${new Date(timeValue * 1000)}`
   };
 
   const job = schedule.scheduleJob(new Date(timeValue * 1000), 
