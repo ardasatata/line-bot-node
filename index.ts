@@ -439,15 +439,15 @@ app.get('/test-api', async (req: Request, res: Response): Promise<Response> =>{
   });
 })
 
-const getPrayerScheduleToday = async (location: string, country: string) => {
+const getPrayerScheduleToday = async (city: string, country: string) => {
 
   let prayerTimeData: AxiosResponse<any>;
   let today = moment().get('date') - 1 // date to array index 
 
   return axios.get("http://api.aladhan.com/v1/calendarByCity", {
     params: {
-      city: 'zhongli',
-      country: 'taiwan',
+      city: city,
+      country: country,
       method: 2,
       month: moment().month() + 1,
       year: moment().year()
