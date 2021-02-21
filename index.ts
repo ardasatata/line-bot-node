@@ -99,7 +99,7 @@ app.post(
           // group message handler
           if(event.source.type=='group'){
             console.log('this is message group')
-            await checkGroupId(event);
+            checkGroupId(event);
           }
 
         } catch (err: unknown) {
