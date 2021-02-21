@@ -157,23 +157,21 @@ app.post(
             //@ts-ignore
             const todaySchedule: Array<any> = await getPrayerScheduleToday(city, country)
             //@ts-ignore
-            const timings = todaySchedule.timings;
+            const timings:PrayerTimingsType = todaySchedule.timings;
 
             console.log(timings.Fajr)
 
             response = {
               type: 'text',
               text: 
-                `Today Prayer Times for ${city},${country}\n
-                Fajr : ${timings.Fajr}\n
-                Sunrise : ${timings.Sunrise}\n
-                Dhur : ${timings.Dhur}\n
-                Asr : ${timings.Asr}\n
-                Maghrib : ${timings.Maghrib}\n
-                Isha : ${timings.Isha}\n`,
+                `Today Prayer Times for ${city},${country}\n`+
+                `Fajr : ${timings.Fajr}\n`+
+                `Sunrise : ${timings.Sunrise}\n`+
+                `Dhuhr : ${timings.Dhuhr}\n`+
+                `Asr : ${timings.Asr}\n`+
+                `Maghrib : ${timings.Maghrib}\n`+
+                `Isha : ${timings.Isha}\n`,
             };
-            console.log(response)
-            console.log(replyToken)
             client.replyMessage(replyToken, response)
 
           }
@@ -227,6 +225,16 @@ type GroupItemsType = {
   name?: string;
   isActive: boolean;
 }
+
+type PrayerTimingsType = {
+  Fajr: string;
+  Sunrise: string;
+  Dhuhr: string;
+  Asr: string;
+  Maghrib: string;
+  Isha: string;
+}
+
 
 type DailyReminderType = {
   id: number;
