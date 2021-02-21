@@ -4,6 +4,7 @@ import { ClientConfig, Client, middleware, MiddlewareConfig, WebhookEvent, TextM
 import express, { Application, Request, Response } from 'express';
 import moment from 'moment';
 import * as admin from 'firebase-admin'; // Firebase Imports
+import { group } from 'console';
 
 const schedule = require('node-schedule');
 
@@ -99,6 +100,10 @@ app.post(
           // group message handler
           if(event.source.type=='group'){
             console.log('this is message type group only')
+            let response:TextMessage;
+
+            //@ts-ignore
+            const { replyToken } = event;
 
             //@ts-ignore
             const { text } = event.message;
@@ -112,12 +117,26 @@ app.post(
               console.log(`location ${textSplit[1]}, group name ${textSplit[2]}`)
 
               const groupItem:GroupItemsType = {
-                groupId: event.source.groupId,
+                id: event.source.groupId,
                 location: textSplit[1],
                 name: textSplit[2]
               }
             
               const addNewGroup = await registerNewGroup(groupItem)
+
+              if(addNewGroup){
+                // Create a new message.
+                response = {
+                  type: 'text',
+                  text: `Data Updated. \n
+                         id : ${groupItem.id}\n
+                         location : ${groupItem.location}\n
+                         groupName : ${groupItem.name}`,
+                };
+                console.log(response)
+                console.log(replyToken)
+                client.replyMessage(replyToken, response)
+              }
 
             }else if(command==='/check'){
               checkGroupId(event);
@@ -156,9 +175,9 @@ const GROUP_LIST = [
 ]
 
 type GroupItemsType = {
-  groupId: string;
-  name?: string;
+  id: string;
   location: string;
+  name?: string;
 }
 
 type DailyReminderType = {
@@ -352,7 +371,7 @@ app.get('/test', async (req: Request, res: Response): Promise<Response> =>{
 app.get('/test2', async (req: Request, res: Response): Promise<Response> =>{
 
   const groupItem:GroupItemsType = {
-    groupId: "C048ee0720fddc0f9e107e6ffa7bc7f28",
+    id: "C048ee0720fddc0f9e107e6ffa7bc7f28",
     location: 'zhongli',
     name: 'Musholla Al-Mudhorot'
   }
@@ -397,14 +416,19 @@ const checkGroupId = async (event: WebhookEvent) => {
   const getGroupData = await db.collection("Groups").doc(event.source.groupId).get().then( returnData =>{
     if (returnData.exists){
       // @ts-ignore
-      var groupName = returnData.data().groupName
+      var groupName = returnData.data().id
       // @ts-ignore
       var location = returnData.data().location
+      // @ts-ignore
+      var name = returnData.data().name
 
       // Create a new message.
       const res: TextMessage = {
         type: 'text',
-        text: `${groupName} ${location}`,
+        text: `Data Updated. \n
+              id : ${groupName}\n
+              location : ${location}\n
+              name : ${name}\n`,
       };
 
       response = res;
@@ -431,49 +455,10 @@ const checkGroupId = async (event: WebhookEvent) => {
 
 const addNewGroupHandler = async (event: WebhookEvent) => {
 
-  // @ts-ignore
-const { replyToken } = event;
-
-let response:TextMessage;
-
-// @ts-ignore
-const getGroupData = await db.collection("Groups").doc(event.source.groupId).get().then( returnData =>{
-  if (returnData.exists){
-    // @ts-ignore
-    var groupName = returnData.data().groupName
-    // @ts-ignore
-    var location = returnData.data().location
-
-    // Create a new message.
-    const res: TextMessage = {
-      type: 'text',
-      text: `${groupName} ${location}`,
-    };
-
-    response = res;
-
-  } else {
-
-    // Create a new message.
-    const res: TextMessage = {
-      type: 'text',
-      text: `You are not registed yet`,
-    };
-
-    response = res;
-  }
-  console.log(response)
-  console.log(replyToken)
-  client.replyMessage(replyToken, response)
-}).catch(err => {
-    console.log('error get group data')
-    console.log(err)
-})
 }
 
-
 const registerNewGroup = async (groupItem: GroupItemsType) => {
-  return await db.collection('Groups').doc(groupItem.groupId).set(groupItem);
+  return await db.collection('Groups').doc(groupItem.id).set(groupItem);
 }
 
 // Create a server and listen to it.
