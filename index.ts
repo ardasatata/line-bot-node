@@ -274,31 +274,14 @@ app.get('/send-message', async (req: Request, res: Response): Promise<Response> 
   });
 })
 
-const startReminder = (name: string, timeValue: number, groupId: string, location: string) => {
-
-  const response: TextMessage = {
-    type: 'text',
-    text: `It's time to ${name.toUpperCase()} in ${location.toUpperCase()}, Time : ${new Date(timeValue * 1000)}`
-  };
-
-  const job = schedule.scheduleJob(new Date(timeValue * 1000), 
-        async function(){
-          await client.pushMessage(groupId, response)
-          await console.log(response);
-      });
-}
-
-// const textEventHandler = async (event: WebhookEvent): Promise<MessageAPIResponseBase | undefined> => {
-
-const checkGroupId = async (event: WebhookEvent) => {
-
-    // @ts-ignore
-  const { replyToken } = event;
+app.get('/test', async (req: Request, res: Response): Promise<Response> =>{
 
   let response:TextMessage;
 
+  const groupId = "C048ee0720fddc0f9e107e6ffa7bc7f28"
+
   // @ts-ignore
-  const getGroupData = await db.collection("Groups").doc(event.source.groupId).get().then( returnData =>{
+  const getGroupData = await db.collection("Groups").doc(groupId).get().then( returnData =>{
     if (returnData.exists){
       // @ts-ignore
       var groupName = returnData.data().groupName
@@ -328,7 +311,114 @@ const checkGroupId = async (event: WebhookEvent) => {
       console.log(err)
   }).then(()=>{
     console.log(response)
+    client.pushMessage(groupId, response)
+  })
+  
+  return res.status(200).json({
+    status: 'success',
+    response: 'jancok'
+  });
+})
+
+app.get('/register-group', async (req: Request, res: Response): Promise<Response> =>{
+
+  let response:TextMessage;
+
+  const groupId = "C048ee0720fddc0f9e107e6ffa7bc7f28"
+
+  // @ts-ignore
+  const getGroupData = await db.collection("Groups").doc().get(groupId).then( returnData =>{
+    if (returnData.exists){
+      // @ts-ignore
+      var groupName = returnData.data().groupName
+      // @ts-ignore
+      var location = returnData.data().location
+
+      // Create a new message.
+      const res: TextMessage = {
+        type: 'text',
+        text: `${groupName} ${location}`,
+      };
+
+      response = res;
+
+    } else {
+
+      // Create a new message.
+      const res: TextMessage = {
+        type: 'text',
+        text: `You are not registed yet`,
+      };
+
+      response = res;
+    }
+    return null
+  }).catch(err => {
+      console.log(err)
+  }).then(()=>{
+    console.log(response)
+    client.pushMessage(groupId, response)
+  })
+  
+  return res.status(200).json({
+    status: 'success',
+    response: 'jancok'
+  });
+})
+
+const startReminder = (name: string, timeValue: number, groupId: string, location: string) => {
+
+  const response: TextMessage = {
+    type: 'text',
+    text: `It's time to ${name.toUpperCase()} in ${location.toUpperCase()}, Time : ${new Date(timeValue * 1000)}`
+  };
+
+  const job = schedule.scheduleJob(new Date(timeValue * 1000), 
+        async function(){
+          await client.pushMessage(groupId, response)
+          await console.log(response);
+      });
+}
+
+const checkGroupId = async (event: WebhookEvent) => {
+
+    // @ts-ignore
+  const { replyToken } = event;
+
+  let response:TextMessage;
+
+  // @ts-ignore
+  const getGroupData = db.collection("Groups").doc(event.source.groupId).get().then( returnData =>{
+    if (returnData.exists){
+      // @ts-ignore
+      var groupName = returnData.data().groupName
+      // @ts-ignore
+      var location = returnData.data().location
+
+      // Create a new message.
+      const res: TextMessage = {
+        type: 'text',
+        text: `${groupName} ${location}`,
+      };
+
+      response = res;
+
+    } else {
+
+      // Create a new message.
+      const res: TextMessage = {
+        type: 'text',
+        text: `You are not registed yet`,
+      };
+
+      response = res;
+    }
+
+    console.log(response)
     client.replyMessage(replyToken, response)
+    return null
+  }).catch(err => {
+      console.log(err)
   })
 }
 
