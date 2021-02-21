@@ -98,8 +98,31 @@ app.post(
 
           // group message handler
           if(event.source.type=='group'){
-            console.log('this is message group')
-            checkGroupId(event);
+            console.log('this is message type group only')
+
+            //@ts-ignore
+            const { text } = event.message;
+
+            const textSplit = text.split(" ");
+            const command = textSplit[0];
+
+            // eg: /register zhongli Musholla-1
+            if(command==='/register'){
+              console.log('register command')
+              console.log(`location ${textSplit[1]}, group name ${textSplit[2]}`)
+
+              const groupItem:GroupItemsType = {
+                groupId: event.source.groupId,
+                location: textSplit[1],
+                name: textSplit[2]
+              }
+            
+              const addNewGroup = await registerNewGroup(groupItem)
+
+            }else if(command==='/check'){
+              checkGroupId(event);
+            }
+
           }
 
         } catch (err: unknown) {
@@ -131,6 +154,12 @@ const GROUP_LIST = [
   'C048ee0720fddc0f9e107e6ffa7bc7f28',
   'Cdbd57fd622114d68bab8ec8a0062faef'
 ]
+
+type GroupItemsType = {
+  groupId: string;
+  name?: string;
+  location: string;
+}
 
 type DailyReminderType = {
   id: number;
@@ -320,45 +349,22 @@ app.get('/test', async (req: Request, res: Response): Promise<Response> =>{
   });
 })
 
-app.get('/register-group', async (req: Request, res: Response): Promise<Response> =>{
+app.get('/test2', async (req: Request, res: Response): Promise<Response> =>{
 
-  let response:TextMessage;
+  const groupItem:GroupItemsType = {
+    groupId: "C048ee0720fddc0f9e107e6ffa7bc7f28",
+    location: 'zhongli',
+    name: 'Musholla Al-Mudhorot'
+  }
 
-  const groupId = "C048ee0720fddc0f9e107e6ffa7bc7f28"
+  const addNewGroup = await registerNewGroup(groupItem)
 
-  // @ts-ignore
-  const getGroupData = await db.collection("Groups").doc().get(groupId).then( returnData =>{
-    if (returnData.exists){
-      // @ts-ignore
-      var groupName = returnData.data().groupName
-      // @ts-ignore
-      var location = returnData.data().location
-
-      // Create a new message.
-      const res: TextMessage = {
-        type: 'text',
-        text: `${groupName} ${location}`,
-      };
-
-      response = res;
-
-    } else {
-
-      // Create a new message.
-      const res: TextMessage = {
-        type: 'text',
-        text: `You are not registed yet`,
-      };
-
-      response = res;
-    }
-    return null
-  }).catch(err => {
-      console.log(err)
-  }).then(()=>{
-    console.log(response)
-    client.pushMessage(groupId, response)
-  })
+  if(addNewGroup){
+    return res.status(200).json({
+      status: 'success',
+      response: 'Yeay'
+    });
+  }
   
   return res.status(200).json({
     status: 'success',
@@ -420,6 +426,54 @@ const checkGroupId = async (event: WebhookEvent) => {
       console.log('error get group data')
       console.log(err)
   })
+}
+
+
+const addNewGroupHandler = async (event: WebhookEvent) => {
+
+  // @ts-ignore
+const { replyToken } = event;
+
+let response:TextMessage;
+
+// @ts-ignore
+const getGroupData = await db.collection("Groups").doc(event.source.groupId).get().then( returnData =>{
+  if (returnData.exists){
+    // @ts-ignore
+    var groupName = returnData.data().groupName
+    // @ts-ignore
+    var location = returnData.data().location
+
+    // Create a new message.
+    const res: TextMessage = {
+      type: 'text',
+      text: `${groupName} ${location}`,
+    };
+
+    response = res;
+
+  } else {
+
+    // Create a new message.
+    const res: TextMessage = {
+      type: 'text',
+      text: `You are not registed yet`,
+    };
+
+    response = res;
+  }
+  console.log(response)
+  console.log(replyToken)
+  client.replyMessage(replyToken, response)
+}).catch(err => {
+    console.log('error get group data')
+    console.log(err)
+})
+}
+
+
+const registerNewGroup = async (groupItem: GroupItemsType) => {
+  return await db.collection('Groups').doc(groupItem.groupId).set(groupItem);
 }
 
 // Create a server and listen to it.
