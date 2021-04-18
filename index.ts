@@ -346,6 +346,9 @@ app.get('/send-message', async (req: Request, res: Response): Promise<Response> 
 
   console.log(schedule.scheduledJobs)
 
+  //cancel existing job ?
+  for (const job in schedule.scheduledJobs) schedule.cancelJob(job);
+
   // console.log(now)
 
   const textEventMessage : TextEventMessage = {
