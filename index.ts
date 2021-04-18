@@ -150,6 +150,7 @@ app.post(
           // eg: /schedule [city] [country]
           // eg: /schedule zhongli taiwan
           else if(command==='/schedule'){
+            
             const city = textSplit[1];
             const country = textSplit[2];
             console.log(`get schedule for ${city}, ${country}`)
@@ -341,7 +342,11 @@ app.get('/send-message', async (req: Request, res: Response): Promise<Response> 
 
   const now = moment()
 
-  console.log(now)
+  // const j = schedule
+
+  console.log(schedule.scheduledJobs)
+
+  // console.log(now)
 
   const textEventMessage : TextEventMessage = {
     id: '0',
