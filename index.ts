@@ -176,6 +176,10 @@ app.post(
 
           }
 
+          else if(command==='/check'){
+            console.log('checking')
+          }
+
         } catch (err: unknown) {
           if (err instanceof Error) {
             console.error(err);
