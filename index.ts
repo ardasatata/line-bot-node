@@ -338,8 +338,12 @@ const REMINDER_LIST: Array<DailyReminderType> = [
   }
 ]
 
-// Testing command
 app.get('/send-message', async (req: Request, res: Response): Promise<Response> =>{
+
+  const now = moment()
+
+  //cancel existing job run whenever new group added
+  for (const job in schedule.scheduledJobs) schedule.cancelJob(job);
 
   const textEventMessage : TextEventMessage = {
     id: '0',
@@ -382,16 +386,6 @@ app.get('/cancel-schedule', async (req: Request, res: Response): Promise<Respons
 
   //cancel existing job run whenever new group added
   for (const job in schedule.scheduledJobs) schedule.cancelJob(job);
-
-  return res.status(200).json({
-    status: 'success',
-  });
-})
-
-// test get timmings
-app.get('/get-timming', async (req: Request, res: Response): Promise<Response> =>{
-
-  fetchSchedule();
 
   return res.status(200).json({
     status: 'success',
@@ -547,6 +541,11 @@ const checkGroupId = async (event: WebhookEvent) => {
   })
 }
 
+
+const addNewGroupHandler = async (event: WebhookEvent) => {
+
+}
+
 const registerNewGroup = async (groupItem: GroupItemsType) => {
   return await db.collection('Groups').doc(groupItem.id).set(groupItem);
 }
@@ -555,16 +554,3 @@ const registerNewGroup = async (groupItem: GroupItemsType) => {
 app.listen(PORT, () => {
   console.log(`Application is live and listening on port ${PORT}`);
 });
-
-const fetchSchedule = async () => {         
-    const city = 'zhongli'
-    const country = 'tw'
-    console.log(`get schedule for ${city}, ${country}`)
-
-    //@ts-ignore
-    const todaySchedule: Array<any> = await getPrayerScheduleToday(city, country)
-    //@ts-ignore
-    const timings:PrayerTimingsType = todaySchedule.timings;
-
-    console.log(timings)
-}
