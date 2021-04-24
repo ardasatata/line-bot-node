@@ -443,7 +443,7 @@ app.get('/test-api-new', async (req: Request, res: Response): Promise<Response> 
   //@ts-ignore
   const response: Array<any> = await getPrayerScheduleTodayNew('taipei')
   //@ts-ignore
-  const timings = response
+  // const timings = response
 
   return res.status(200).json({
     status: 'success',
@@ -545,22 +545,30 @@ const getPrayerScheduleTodayNew = async (city: string) => {
 
   let prayerTimeData: AxiosResponse<any>;
 
-  return axios.get("https://api.pray.zone/v2/times/today.json", {
+  prayerTimeData = await axios.get("https://api.pray.zone/v2/times/today.json", {
     params: {
       city: city,
     }
   })
-  .then(function (response) {
-    prayerTimeData = response
-  })
-  .catch(function (error) {
-    console.log(error);
-  })
-  .then(function () {
-    // console.log(prayerTimeData);
-    // //@ts-ignore
-    return prayerTimeData;
-  }); 
+
+  console.log(prayerTimeData);
+
+  // return axios.get("https://api.pray.zone/v2/times/today.json", {
+  //   params: {
+  //     city: city,
+  //   }
+  // })
+  // .then(function (response) {
+  //   prayerTimeData = response
+  // })
+  // .catch(function (error) {
+  //   console.log(error);
+  // })
+  // .then(function () {
+  //   console.log(prayerTimeData);
+  //   // //@ts-ignore
+  //   return prayerTimeData;
+  // }); 
 }
 
 const registerNewGroup = async (groupItem: GroupItemsType) => {
