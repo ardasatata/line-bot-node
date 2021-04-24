@@ -177,6 +177,34 @@ app.post(
 
           }
 
+          // eg: /schedule [city] 
+          // eg: /schedule taipei
+          else if(command==='/schedule-new'){
+            
+            const city = textSplit[1];
+            console.log(`get schedule for ${city}`)
+
+            //@ts-ignore
+            const res: Array<any> = await getPrayerScheduleTodayNew(city)
+            console.log(res.datetime[0].times)
+
+            const timings = res.datetime[0].times;
+
+            response = {
+              type: 'text',
+              text: 
+                `Today Prayer Times for ${city}}\n`+
+                `Fajr : ${timings.Fajr}\n`+
+                `Sunrise : ${timings.Sunrise}\n`+
+                `Dhuhr : ${timings.Dhuhr}\n`+
+                `Asr : ${timings.Asr}\n`+
+                `Maghrib : ${timings.Maghrib}\n`+
+                `Isha : ${timings.Isha}\n`,
+            };
+            client.replyMessage(replyToken, response)
+
+          }
+
           else if(command==='/check'){
             console.log('checking')
           }
@@ -445,6 +473,8 @@ app.get('/test-api-new', async (req: Request, res: Response): Promise<Response> 
   //@ts-ignore
   // const timings = response
 
+  console.log(response.datetime[0].times);
+
   return res.status(200).json({
     status: 'success',
     response
@@ -551,24 +581,8 @@ const getPrayerScheduleTodayNew = async (city: string) => {
     }
   })
 
-  console.log(prayerTimeData);
+  return prayerTimeData.data.results
 
-  // return axios.get("https://api.pray.zone/v2/times/today.json", {
-  //   params: {
-  //     city: city,
-  //   }
-  // })
-  // .then(function (response) {
-  //   prayerTimeData = response
-  // })
-  // .catch(function (error) {
-  //   console.log(error);
-  // })
-  // .then(function () {
-  //   console.log(prayerTimeData);
-  //   // //@ts-ignore
-  //   return prayerTimeData;
-  // }); 
 }
 
 const registerNewGroup = async (groupItem: GroupItemsType) => {
