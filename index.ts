@@ -186,8 +186,9 @@ app.post(
 
             //@ts-ignore
             const res: Array<any> = await getPrayerScheduleTodayNew(city)
+            //@ts-ignore
             console.log(res.datetime[0].times)
-
+            //@ts-ignore
             const timings = res.datetime[0].times;
 
             response = {
