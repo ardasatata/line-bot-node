@@ -388,6 +388,16 @@ app.get('/cancel-schedule', async (req: Request, res: Response): Promise<Respons
   });
 })
 
+// test get timmings
+app.get('/get-timming', async (req: Request, res: Response): Promise<Response> =>{
+
+  fetchSchedule();
+
+  return res.status(200).json({
+    status: 'success',
+  });
+})
+
 app.get('/test', async (req: Request, res: Response): Promise<Response> =>{
 
   let response:TextMessage;
@@ -545,3 +555,16 @@ const registerNewGroup = async (groupItem: GroupItemsType) => {
 app.listen(PORT, () => {
   console.log(`Application is live and listening on port ${PORT}`);
 });
+
+const fetchSchedule = async () => {         
+    const city = 'zhongli'
+    const country = 'tw'
+    console.log(`get schedule for ${city}, ${country}`)
+
+    //@ts-ignore
+    const todaySchedule: Array<any> = await getPrayerScheduleToday(city, country)
+    //@ts-ignore
+    const timings:PrayerTimingsType = todaySchedule.timings;
+
+    console.log(timings)
+}
