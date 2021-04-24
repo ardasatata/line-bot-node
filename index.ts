@@ -338,18 +338,8 @@ const REMINDER_LIST: Array<DailyReminderType> = [
   }
 ]
 
+// Testing command
 app.get('/send-message', async (req: Request, res: Response): Promise<Response> =>{
-
-  const now = moment()
-
-  // const j = schedule
-
-  console.log(schedule.scheduledJobs)
-
-  //cancel existing job ?
-  for (const job in schedule.scheduledJobs) schedule.cancelJob(job);
-
-  // console.log(now)
 
   const textEventMessage : TextEventMessage = {
     id: '0',
@@ -373,11 +363,6 @@ app.get('/send-message', async (req: Request, res: Response): Promise<Response> 
 
     const schedules = generateSchedules()
 
-    // item.schedules.map((item)=>{
-    //   console.log(new Date(item.time * 1000))
-    //   startReminder(item.name, item.time, groupId, location)
-    // })
-
     schedules.map((item)=>{
       console.log(new Date(item.time * 1000))
       startReminder(item.name, item.time, groupId, location)
@@ -387,6 +372,19 @@ app.get('/send-message', async (req: Request, res: Response): Promise<Response> 
   return res.status(200).json({
     status: 'success',
     response
+  });
+})
+
+// Cancel Scheduler
+app.get('/cancel-schedule', async (req: Request, res: Response): Promise<Response> =>{
+
+  const now = moment()
+
+  //cancel existing job run whenever new group added
+  for (const job in schedule.scheduledJobs) schedule.cancelJob(job);
+
+  return res.status(200).json({
+    status: 'success',
   });
 })
 
@@ -537,11 +535,6 @@ const checkGroupId = async (event: WebhookEvent) => {
       console.log('error get group data')
       console.log(err)
   })
-}
-
-
-const addNewGroupHandler = async (event: WebhookEvent) => {
-
 }
 
 const registerNewGroup = async (groupItem: GroupItemsType) => {
