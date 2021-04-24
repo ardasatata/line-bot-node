@@ -438,14 +438,12 @@ app.get('/test', async (req: Request, res: Response): Promise<Response> =>{
   });
 })
 
-app.get('/test-api', async (req: Request, res: Response): Promise<Response> =>{
+app.get('/test-api-new', async (req: Request, res: Response): Promise<Response> =>{
 
   //@ts-ignore
-  const response: Array<any> = await getPrayerScheduleToday('zhongli', 'taiwan')
+  const response: Array<any> = await getPrayerScheduleTodayNew('taipei')
   //@ts-ignore
-  const timings = response.timings;
-
-  console.log(timings.Fajr)
+  const timings = response
 
   return res.status(200).json({
     status: 'success',
@@ -453,6 +451,7 @@ app.get('/test-api', async (req: Request, res: Response): Promise<Response> =>{
   });
 })
 
+// Get API Aladhan
 const getPrayerScheduleToday = async (city: string, country: string) => {
 
   let prayerTimeData: AxiosResponse<any>;
@@ -541,9 +540,27 @@ const checkGroupId = async (event: WebhookEvent) => {
   })
 }
 
+// Get API Pray Zone
+const getPrayerScheduleTodayNew = async (city: string) => {
 
-const addNewGroupHandler = async (event: WebhookEvent) => {
+  let prayerTimeData: AxiosResponse<any>;
 
+  return axios.get("https://api.pray.zone/v2/times/today.json", {
+    params: {
+      city: city,
+    }
+  })
+  .then(function (response) {
+    prayerTimeData = response
+  })
+  .catch(function (error) {
+    console.log(error);
+  })
+  .then(function () {
+    // console.log(prayerTimeData);
+    // //@ts-ignore
+    return prayerTimeData;
+  }); 
 }
 
 const registerNewGroup = async (groupItem: GroupItemsType) => {
