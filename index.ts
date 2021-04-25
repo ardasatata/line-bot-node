@@ -1,14 +1,14 @@
 require('dotenv').config()
 // Import all dependencies, mostly using destructuring for better view.
 import { ClientConfig, Client, middleware, MiddlewareConfig, WebhookEvent, TextMessage, MessageAPIResponseBase, TextEventMessage } from '@line/bot-sdk';
-import express, { Application, Request, Response } from 'express';
-import moment from 'moment';
+import express, { Application, Request, response, Response } from 'express';
+import moment from 'moment-timezone';
 import * as admin from 'firebase-admin'; // Firebase Imports
 import { group } from 'console';
 import axios, { AxiosResponse } from 'axios'
 
 // Import module
-import { DailyReminderType, GroupItemsType, PrayerTimingsType, SchedulesType } from './type'
+import { DailyReminderType, GroupItemsType, PrayerTimingsType, SchedulesType, PrayerTimesData } from './type'
 import { toTitleCase } from './utils'
 
 const schedule = require('node-schedule');
@@ -395,14 +395,14 @@ app.get('/test', async (req: Request, res: Response): Promise<Response> =>{
 // test api from pray.zone
 app.get('/test-api-new', async (req: Request, res: Response): Promise<Response> =>{
 
-  //@ts-ignore
-  const response: PrayerTimingsType = await getTodayPrayerSchedule('taipei')
-  //@ts-ignore
-  // const timings = response
+  const response:PrayerTimesData = await getTodayPrayerData('taipei')
 
-  console.log(response.Fajr);
+  console.log(response)
+
   console.log(moment().add(1, debugTime).unix());
   console.log(moment());
+  console.log(moment().tz(response.timezone));
+  console.log(moment().tz('Asia/Jakarta'));
 
   return res.status(200).json({
     status: 'success',
@@ -485,7 +485,26 @@ const getTodayPrayerSchedule = async (city: string) => {
   })
 
   return prayerTimeData.data.results.datetime[0].times
+}
 
+// Get API Pray Zone
+const getTodayPrayerData = async (city: string) => {
+
+  let prayerTimeData: AxiosResponse<any>;
+
+  prayerTimeData = await axios.get("https://api.pray.zone/v2/times/today.json", {
+    params: {
+      city: city,
+    }
+  })
+
+  let response:PrayerTimesData = {
+    country: prayerTimeData.data.results.location.country,
+    timezone: prayerTimeData.data.results.location.timezone,
+    timmings: prayerTimeData.data.results.datetime[0].times
+  }
+
+  return response
 }
 
 const registerNewGroup = async (groupItem: GroupItemsType) => {

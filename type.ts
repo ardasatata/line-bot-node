@@ -27,3 +27,10 @@ export type SchedulesType = {
   name: 'fajr' | 'duhr' | 'asr' | 'maghrib' | 'isha' | string;
   time: number;
 }
+
+export type PrayerTimesData = {
+  timmings : PrayerTimingsType,
+  timezone : string;
+  country: string;
+
+}
