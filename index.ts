@@ -514,8 +514,8 @@ const example_response = {
     Dhuhr: '11:52',
     Asr: '17:09',
     Sunset: '16.58',
-    Maghrib: '17.10',
-    Isha: '17:11',
+    Maghrib: '01:00',
+    Isha: '17:20',
     Midnight: '23:12'
   }
 }
@@ -530,7 +530,7 @@ const generateSchedule = async () => {
     PrayerTimings.map( timing => {
       //@ts-ignore
       // const generated_unix = generatePrayerTimingUnix(response.timmings[timing], response.timezone);
-      // console.log(timing)
+      console.log(timing)
       //@ts-ignore
       // console.log(generatePrayerTimingUnix(response.timmings[timing], response.timezone))
 
