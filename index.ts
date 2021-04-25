@@ -512,10 +512,10 @@ const example_response = {
     Sunrise: '05:22',
     Fajr: '04:03',
     Dhuhr: '11:52',
-    Asr: '15:21',
+    Asr: '17:09',
     Sunset: '16.58',
-    Maghrib: '16.59',
-    Isha: '17:00',
+    Maghrib: '17.10',
+    Isha: '17:11',
     Midnight: '23:12'
   }
 }
@@ -530,12 +530,15 @@ const generateSchedule = async () => {
     PrayerTimings.map( timing => {
       //@ts-ignore
       // const generated_unix = generatePrayerTimingUnix(response.timmings[timing], response.timezone);
-      console.log(timing)
+      // console.log(timing)
       //@ts-ignore
-      console.log(generatePrayerTimingUnix(response.timmings[timing], response.timezone))
+      // console.log(generatePrayerTimingUnix(response.timmings[timing], response.timezone))
 
       //@ts-ignore
       startReminder(timing, generatePrayerTimingUnix(example_response.timmings[timing], response.timezone), group.data().id, group.data().location)
+
+      //@ts-ignore
+      console.log(example_response.timmings[timing])
     })
 
     console.log(response)
