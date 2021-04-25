@@ -7,6 +7,9 @@ import * as admin from 'firebase-admin'; // Firebase Imports
 import { group } from 'console';
 import axios, { AxiosResponse } from 'axios'
 
+// Import module
+import {DailyReminderType, GroupItemsType, PrayerTimingsType, SchedulesType} from './type'
+
 const schedule = require('node-schedule');
 
 // Config PORT
@@ -119,14 +122,14 @@ app.post(
             //@ts-ignore
             const res: Array<any> = await getPrayerScheduleTodayNew(city)
             //@ts-ignore
-            console.log(res.datetime[0].times)
+            console.log(res)
             //@ts-ignore
-            const timings = res.datetime[0].times;
+            const timings: PrayerTimingsType = res;
 
             response = {
               type: 'text',
               text: 
-                `Today Prayer Times for ${city}}\n`+
+                `Today Prayer Times for ${toTitleCase(city)}\n`+
                 `Fajr : ${timings.Fajr}\n`+
                 `Sunrise : ${timings.Sunrise}\n`+
                 `Dhuhr : ${timings.Dhuhr}\n`+
@@ -141,7 +144,7 @@ app.post(
             console.log('checking')
           }
 
-          // group message handler
+          // Group message type handler
           if(event.source.type=='group'){
             console.log('this is message type group only')
 
@@ -221,36 +224,6 @@ const GROUPS_EXAMPLE: Array<GroupItemsType> = [
     isActive: true
   }
 ]
-
-type GroupItemsType = {
-  id: string;
-  location: string;
-  country: string;
-  name?: string;
-  isActive: boolean;
-}
-
-type PrayerTimingsType = {
-  Fajr: string;
-  Sunrise: string;
-  Dhuhr: string;
-  Asr: string;
-  Maghrib: string;
-  Isha: string;
-}
-
-
-type DailyReminderType = {
-  id: number;
-  groupId: string;
-  location: string;
-  schedules: Array<SchedulesType>;
-}
-
-type SchedulesType = {
-  name: 'fajr' | 'duhr' | 'asr' | 'maghrib' | 'isha' | string;
-  time: number;
-}
 
 const PRAYER_TIME_NAMES = [
   'fajr', 'duhr' , 'asr', 'maghrib', 'isha'
@@ -532,8 +505,8 @@ const checkGroupId = async (event: WebhookEvent) => {
 
       response = res;
     }
-    console.log(response)
-    console.log(replyToken)
+    // console.log(response)
+    // console.log(replyToken)
     client.replyMessage(replyToken, response)
   }).catch(err => {
       console.log('error get group data')
@@ -552,7 +525,7 @@ const getPrayerScheduleTodayNew = async (city: string) => {
     }
   })
 
-  return prayerTimeData.data.results
+  return prayerTimeData.data.results.datetime[0].times
 
 }
 
@@ -564,3 +537,13 @@ const registerNewGroup = async (groupItem: GroupItemsType) => {
 app.listen(PORT, () => {
   console.log(`Application is live and listening on port ${PORT}`);
 });
+
+// Utils
+function toTitleCase(str: string) {
+  return str.replace(
+    /\w\S*/g,
+    function(txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    }
+  );
+}
