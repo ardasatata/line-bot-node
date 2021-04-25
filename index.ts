@@ -109,6 +109,38 @@ app.post(
 
           let response:TextMessage;
 
+          // eg: /schedule [city] 
+          // eg: /schedule taipei
+          if(command==='/schedule'){
+            
+            const city = textSplit[1];
+            console.log(`get schedule for ${city}`)
+
+            //@ts-ignore
+            const res: Array<any> = await getPrayerScheduleTodayNew(city)
+            //@ts-ignore
+            console.log(res.datetime[0].times)
+            //@ts-ignore
+            const timings = res.datetime[0].times;
+
+            response = {
+              type: 'text',
+              text: 
+                `Today Prayer Times for ${city}}\n`+
+                `Fajr : ${timings.Fajr}\n`+
+                `Sunrise : ${timings.Sunrise}\n`+
+                `Dhuhr : ${timings.Dhuhr}\n`+
+                `Asr : ${timings.Asr}\n`+
+                `Maghrib : ${timings.Maghrib}\n`+
+                `Isha : ${timings.Isha}\n`,
+            };
+            client.replyMessage(replyToken, response)
+          }
+
+          else if(command==='/check'){
+            console.log('checking')
+          }
+
           // group message handler
           if(event.source.type=='group'){
             console.log('this is message type group only')
@@ -146,68 +178,6 @@ app.post(
             else if(command==='/pause'){
               console.log(command)
             }
-          }
-          // eg: /schedule [city] [country]
-          // eg: /schedule zhongli taiwan
-          else if(command==='/schedule'){
-            
-            const city = textSplit[1];
-            const country = textSplit[2];
-            console.log(`get schedule for ${city}, ${country}`)
-
-            //@ts-ignore
-            const todaySchedule: Array<any> = await getPrayerScheduleToday(city, country)
-            //@ts-ignore
-            const timings:PrayerTimingsType = todaySchedule.timings;
-
-            console.log(timings.Fajr)
-
-            response = {
-              type: 'text',
-              text: 
-                `Today Prayer Times for ${city},${country}\n`+
-                `Fajr : ${timings.Fajr}\n`+
-                `Sunrise : ${timings.Sunrise}\n`+
-                `Dhuhr : ${timings.Dhuhr}\n`+
-                `Asr : ${timings.Asr}\n`+
-                `Maghrib : ${timings.Maghrib}\n`+
-                `Isha : ${timings.Isha}\n`,
-            };
-            client.replyMessage(replyToken, response)
-
-          }
-
-          // eg: /schedule [city] 
-          // eg: /schedule taipei
-          else if(command==='/schedule-new'){
-            
-            const city = textSplit[1];
-            console.log(`get schedule for ${city}`)
-
-            //@ts-ignore
-            const res: Array<any> = await getPrayerScheduleTodayNew(city)
-            //@ts-ignore
-            console.log(res.datetime[0].times)
-            //@ts-ignore
-            const timings = res.datetime[0].times;
-
-            response = {
-              type: 'text',
-              text: 
-                `Today Prayer Times for ${city}}\n`+
-                `Fajr : ${timings.Fajr}\n`+
-                `Sunrise : ${timings.Sunrise}\n`+
-                `Dhuhr : ${timings.Dhuhr}\n`+
-                `Asr : ${timings.Asr}\n`+
-                `Maghrib : ${timings.Maghrib}\n`+
-                `Isha : ${timings.Isha}\n`,
-            };
-            client.replyMessage(replyToken, response)
-
-          }
-
-          else if(command==='/check'){
-            console.log('checking')
           }
 
         } catch (err: unknown) {
