@@ -32,5 +32,14 @@ export type PrayerTimesData = {
   timmings : PrayerTimingsType,
   timezone : string;
   country: string;
-
 }
+
+// Used for looping
+export const PrayerTimings = [
+  'Imsak',
+  'Fajr',
+  'Dhuhr',
+  'Asr',
+  'Maghrib',
+  'Isha'
+]

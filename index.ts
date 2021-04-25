@@ -8,7 +8,7 @@ import { group } from 'console';
 import axios, { AxiosResponse } from 'axios'
 
 // Import module
-import { DailyReminderType, GroupItemsType, PrayerTimingsType, SchedulesType, PrayerTimesData } from './type'
+import { DailyReminderType, GroupItemsType, PrayerTimingsType, SchedulesType, PrayerTimesData, PrayerTimings } from './type'
 import { toTitleCase } from './utils'
 
 const schedule = require('node-schedule');
@@ -395,31 +395,11 @@ app.get('/test', async (req: Request, res: Response): Promise<Response> =>{
 // test api from pray.zone
 app.get('/test-api-new', async (req: Request, res: Response): Promise<Response> =>{
 
-  const response:PrayerTimesData = await getTodayPrayerData('taipei')
-
-  console.log(response)
-
-  const today = moment().format().slice(0, -15)
-  const fajr = response.timmings.Fajr
-
-  const today_fajr = today + ' ' + fajr
-
-  console.log(today_fajr);
-
-  const moment_tz = moment.tz(today_fajr, response.timezone)
-
-  console.log(moment_tz)
-  console.log(moment_tz.unix())
-  console.log(moment_tz.format())
-
-  console.log(moment().add(1, debugTime).unix());
-  console.log(moment());
-  console.log(moment().tz(response.timezone));
-  console.log(moment().tz('Asia/Jakarta'));
+  generateSchedule();
 
   return res.status(200).json({
     status: 'success',
-    response
+    // response
   });
 })
 
@@ -518,6 +498,49 @@ const getTodayPrayerData = async (city: string) => {
   }
 
   return response
+}
+
+const generatePrayerTimingUnix = (prayerTime:string, timezone:string) => {
+  return moment.tz(`${moment().format().slice(0, -15)} ${prayerTime}`, timezone).unix()
+}
+
+const example_response = {
+  country: 'Taiwan',
+  timezone: 'Asia/Taipei',
+  timmings: {
+    Imsak: '03:53',
+    Sunrise: '05:22',
+    Fajr: '04:03',
+    Dhuhr: '11:52',
+    Asr: '15:21',
+    Sunset: '16.58',
+    Maghrib: '16.59',
+    Isha: '17:00',
+    Midnight: '23:12'
+  }
+}
+
+const generateSchedule = async () => {
+  const getGroupData = await db.collection("Groups").get()
+  
+  const schedule = await getGroupData.docs.map(async (group) => {
+
+    const response:PrayerTimesData = await getTodayPrayerData(group.data().location)
+
+    PrayerTimings.map( timing => {
+      //@ts-ignore
+      // const generated_unix = generatePrayerTimingUnix(response.timmings[timing], response.timezone);
+      console.log(timing)
+      //@ts-ignore
+      console.log(generatePrayerTimingUnix(response.timmings[timing], response.timezone))
+
+      //@ts-ignore
+      startReminder(timing, generatePrayerTimingUnix(example_response.timmings[timing], response.timezone), group.data().id, group.data().location)
+    })
+
+    console.log(response)
+  })
+
 }
 
 const registerNewGroup = async (groupItem: GroupItemsType) => {
