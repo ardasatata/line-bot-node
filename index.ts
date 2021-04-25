@@ -399,6 +399,19 @@ app.get('/test-api-new', async (req: Request, res: Response): Promise<Response> 
 
   console.log(response)
 
+  const today = moment().format().slice(0, -15)
+  const fajr = response.timmings.Fajr
+
+  const today_fajr = today + ' ' + fajr
+
+  console.log(today_fajr);
+
+  const moment_tz = moment.tz(today_fajr, response.timezone)
+
+  console.log(moment_tz)
+  console.log(moment_tz.unix())
+  console.log(moment_tz.format())
+
   console.log(moment().add(1, debugTime).unix());
   console.log(moment());
   console.log(moment().tz(response.timezone));
