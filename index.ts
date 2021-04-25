@@ -8,7 +8,8 @@ import { group } from 'console';
 import axios, { AxiosResponse } from 'axios'
 
 // Import module
-import {DailyReminderType, GroupItemsType, PrayerTimingsType, SchedulesType} from './type'
+import { DailyReminderType, GroupItemsType, PrayerTimingsType, SchedulesType } from './type'
+import { toTitleCase } from './utils'
 
 const schedule = require('node-schedule');
 
@@ -117,12 +118,10 @@ app.post(
           if(command==='/schedule'){
             
             const city = textSplit[1];
-            console.log(`get schedule for ${city}`)
+            console.log(`get schedule for ${toTitleCase(city)}`)
 
             //@ts-ignore
-            const res: Array<any> = await getPrayerScheduleTodayNew(city)
-            //@ts-ignore
-            console.log(res)
+            const res: Array<any> = await getTodayPrayerSchedule(city)
             //@ts-ignore
             const timings: PrayerTimingsType = res;
 
@@ -208,26 +207,7 @@ app.post(
  */
 
 
-const GROUPS_EXAMPLE: Array<GroupItemsType> = [
-  {
-    id: "C048ee0720fddc0f9e107e6ffa7bc7f28",
-    location: 'zhongli',
-    country: 'taiwan',
-    name: 'Musholla al mudhorot',
-    isActive: true
-  },
-  {
-    id: "Cdbd57fd622114d68bab8ec8a0062faef",
-    location: 'malang',
-    country: 'indonesia',
-    name: 'Musholla al siswanto',
-    isActive: true
-  }
-]
-
-const PRAYER_TIME_NAMES = [
-  'fajr', 'duhr' , 'asr', 'maghrib', 'isha'
-]
+import {PRAYER_TIME_NAMES} from './example'
 
 const debugTime = 's'
 
@@ -364,6 +344,7 @@ app.get('/cancel-schedule', async (req: Request, res: Response): Promise<Respons
   });
 })
 
+// Test send message to group
 app.get('/test', async (req: Request, res: Response): Promise<Response> =>{
 
   let response:TextMessage;
@@ -374,14 +355,14 @@ app.get('/test', async (req: Request, res: Response): Promise<Response> =>{
   const getGroupData = await db.collection("Groups").doc(groupId).get().then( returnData =>{
     if (returnData.exists){
       // @ts-ignore
-      var groupName = returnData.data().groupName
+      var name = returnData.data().name
       // @ts-ignore
       var location = returnData.data().location
 
       // Create a new message.
       const res: TextMessage = {
         type: 'text',
-        text: `${groupName} ${location}`,
+        text: `${name} ${location}`,
       };
 
       response = res;
@@ -401,23 +382,27 @@ app.get('/test', async (req: Request, res: Response): Promise<Response> =>{
       console.log(err)
   }).then(()=>{
     console.log(response)
+    // send message to group
     client.pushMessage(groupId, response)
   })
   
   return res.status(200).json({
     status: 'success',
-    response: 'jancok'
+    response: 'test message to specific group'
   });
 })
 
+// test api from pray.zone
 app.get('/test-api-new', async (req: Request, res: Response): Promise<Response> =>{
 
   //@ts-ignore
-  const response: Array<any> = await getPrayerScheduleTodayNew('taipei')
+  const response: PrayerTimingsType = await getTodayPrayerSchedule('taipei')
   //@ts-ignore
   // const timings = response
 
-  console.log(response.datetime[0].times);
+  console.log(response.Fajr);
+  console.log(moment().add(1, debugTime).unix());
+  console.log(moment());
 
   return res.status(200).json({
     status: 'success',
@@ -425,41 +410,15 @@ app.get('/test-api-new', async (req: Request, res: Response): Promise<Response> 
   });
 })
 
-// Get API Aladhan
-const getPrayerScheduleToday = async (city: string, country: string) => {
-
-  let prayerTimeData: AxiosResponse<any>;
-  let today = moment().get('date') - 1 // date to array index 
-
-  return axios.get("http://api.aladhan.com/v1/calendarByCity", {
-    params: {
-      city: city,
-      country: country,
-      method: 2,
-      month: moment().month() + 1,
-      year: moment().year()
-    }
-  })
-  .then(function (response) {
-    prayerTimeData = response.data.data
-  })
-  .catch(function (error) {
-    console.log(error);
-  })
-  .then(function () {
-    // console.log(prayerTimeData);
-    //@ts-ignore
-    return prayerTimeData[today];
-  }); 
-}
-
+// Create reminder scheduler/job per prayer time 
 const startReminder = (prayerName: string, timeValue: number, groupId: string, location: string) => {
 
   const response: TextMessage = {
     type: 'text',
-    text: `It's time to ${prayerName.toUpperCase()} in ${location.toUpperCase()}, Time : ${new Date(timeValue * 1000)}`
+    text: `It's time to ${toTitleCase(prayerName)} in ${toTitleCase(location)}, Time : ${new Date(timeValue * 1000)}`
   };
 
+  // Scheduler Job
   const job = schedule.scheduleJob(new Date(timeValue * 1000), 
         async function(){
           await client.pushMessage(groupId, response)
@@ -515,7 +474,7 @@ const checkGroupId = async (event: WebhookEvent) => {
 }
 
 // Get API Pray Zone
-const getPrayerScheduleTodayNew = async (city: string) => {
+const getTodayPrayerSchedule = async (city: string) => {
 
   let prayerTimeData: AxiosResponse<any>;
 
@@ -537,13 +496,3 @@ const registerNewGroup = async (groupItem: GroupItemsType) => {
 app.listen(PORT, () => {
   console.log(`Application is live and listening on port ${PORT}`);
 });
-
-// Utils
-function toTitleCase(str: string) {
-  return str.replace(
-    /\w\S*/g,
-    function(txt) {
-      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-    }
-  );
-}
