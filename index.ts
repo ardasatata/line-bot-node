@@ -512,10 +512,9 @@ const example_response = {
     Sunrise: '05:22',
     Fajr: '04:03',
     Dhuhr: '11:52',
-    Asr: '17:09',
-    Sunset: '16.58',
-    Maghrib: '01:00',
-    Isha: '17:20',
+    Asr: '17:26',
+    Maghrib: '17:28',
+    Isha: '17:30',
     Midnight: '23:12'
   }
 }
@@ -523,25 +522,24 @@ const example_response = {
 const generateSchedule = async () => {
   const getGroupData = await db.collection("Groups").get()
   
-  const schedule = await getGroupData.docs.map(async (group) => {
+  const schedule = getGroupData.docs.map(async (group) => {
 
-    const response:PrayerTimesData = await getTodayPrayerData(group.data().location)
+    const response: PrayerTimesData = await getTodayPrayerData(group.data().location);
 
-    PrayerTimings.map( timing => {
+    PrayerTimings.map(timing => {
       //@ts-ignore
       // const generated_unix = generatePrayerTimingUnix(response.timmings[timing], response.timezone);
-      console.log(timing)
+      console.log(timing);
       //@ts-ignore
       // console.log(generatePrayerTimingUnix(response.timmings[timing], response.timezone))
+      //@ts-ignore
+      startReminder(timing, generatePrayerTimingUnix(example_response.timmings[timing], response.timezone), group.data().id, group.data().location);
 
       //@ts-ignore
-      startReminder(timing, generatePrayerTimingUnix(example_response.timmings[timing], response.timezone), group.data().id, group.data().location)
+      console.log(example_response.timmings[timing]);
+    });
 
-      //@ts-ignore
-      console.log(example_response.timmings[timing])
-    })
-
-    console.log(response)
+    console.log(response);
   })
 
 }
