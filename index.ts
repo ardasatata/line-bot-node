@@ -520,6 +520,7 @@ const example_response = {
 }
 
 const generateSchedule = async () => {
+  // Fetch All groups
   const getGroupData = await db.collection("Groups").get()
   
   const schedule = getGroupData.docs.map(async (group) => {
@@ -552,3 +553,48 @@ const registerNewGroup = async (groupItem: GroupItemsType) => {
 app.listen(PORT, () => {
   console.log(`Application is live and listening on port ${PORT}`);
 });
+
+const test_function = () => {
+  const now = moment()
+
+  //cancel existing job run whenever new group added
+  for (const job in schedule.scheduledJobs) schedule.cancelJob(job);
+
+  const textEventMessage : TextEventMessage = {
+    id: '0',
+    text: 'halo semua',
+    type: 'text'
+  }
+
+  const { text } = textEventMessage
+  
+  // Create a new message.
+  const response: TextMessage = {
+    type: 'text',
+    text,
+  };
+
+  REMINDER_LIST.map((item)=>{
+    console.log(item.groupId)
+
+    const groupId = item.groupId
+    const location = item.location
+
+    const schedules = generateSchedules()
+
+    schedules.map((item)=>{
+      console.log(new Date(item.time * 1000))
+      startReminder(item.name, item.time, groupId, location)
+    })
+  })
+
+    // Scheduler Job
+    const job = schedule.scheduleJob('*/5 * * * * *', 
+    async function(){
+      console.log(new Date())
+      console.log('LOG scheduler')
+  });
+}
+
+// Run on start
+test_function();
