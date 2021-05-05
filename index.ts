@@ -171,6 +171,12 @@ app.post(
                 };
                 console.log(response)
                 console.log(replyToken)
+
+                // if add new group succeed cancel all jobs & generate new scheduler
+                cancelAllJobs();
+                generateSchedule();
+                refreshSchedule(); // it would run on loop daily
+                
                 client.replyMessage(replyToken, response)
               }
             }
@@ -294,8 +300,7 @@ app.get('/send-message', async (req: Request, res: Response): Promise<Response> 
 
   const now = moment()
 
-  //cancel existing job run whenever new group added
-  for (const job in schedule.scheduledJobs) schedule.cancelJob(job);
+  cancelAllJobs();
 
   const textEventMessage : TextEventMessage = {
     id: '0',
@@ -321,7 +326,7 @@ app.get('/send-message', async (req: Request, res: Response): Promise<Response> 
 
     schedules.map((item)=>{
       console.log(new Date(item.time * 1000))
-      startReminder(item.name, item.time, groupId, location)
+      startReminder(item.name, item.time, groupId, location, '')
     })
   })
 
@@ -334,10 +339,7 @@ app.get('/send-message', async (req: Request, res: Response): Promise<Response> 
 // Cancel Scheduler
 app.get('/cancel-schedule', async (req: Request, res: Response): Promise<Response> =>{
 
-  const now = moment()
-
-  //cancel existing job run whenever new group added
-  for (const job in schedule.scheduledJobs) schedule.cancelJob(job);
+  cancelAllJobs();
 
   return res.status(200).json({
     status: 'success',
@@ -404,11 +406,17 @@ app.get('/test-api-new', async (req: Request, res: Response): Promise<Response> 
 })
 
 // Create reminder scheduler/job per prayer time 
-const startReminder = (prayerName: string, timeValue: number, groupId: string, location: string) => {
+const startReminder = (prayerName: string, timeValue: number, groupId: string, location: string, timezone: string) => {
+
+  const date = new Date(timeValue * 1000)
+
+  const options = {
+    timeZone : timezone
+  }
 
   const response: TextMessage = {
     type: 'text',
-    text: `It's time to ${toTitleCase(prayerName)} in ${toTitleCase(location)}, Time : ${new Date(timeValue * 1000)}`
+    text: `It's time to ${toTitleCase(prayerName)} in ${toTitleCase(location)}\n`+`Time : ${date.toLocaleTimeString( 'en-US' , options )}`
   };
 
   // Scheduler Job
@@ -519,22 +527,21 @@ const example_response = {
   }
 }
 
+// Generate prayer time reminder from all groups
 const generateSchedule = async () => {
   // Fetch All groups
   const getGroupData = await db.collection("Groups").get()
   
+  // Map all groups
   const schedule = getGroupData.docs.map(async (group) => {
 
+    // fetch prayer times data from location
     const response: PrayerTimesData = await getTodayPrayerData(group.data().location);
 
+    // Map all prayer time
     PrayerTimings.map(timing => {
       //@ts-ignore
-      // const generated_unix = generatePrayerTimingUnix(response.timmings[timing], response.timezone);
-      console.log(timing);
-      //@ts-ignore
-      // console.log(generatePrayerTimingUnix(response.timmings[timing], response.timezone))
-      //@ts-ignore
-      startReminder(timing, generatePrayerTimingUnix(example_response.timmings[timing], response.timezone), group.data().id, group.data().location);
+      startReminder(timing, generatePrayerTimingUnix(response.timmings[timing], response.timezone), group.data().id, group.data().location);
 
       //@ts-ignore
       console.log(example_response.timmings[timing]);
@@ -557,8 +564,7 @@ app.listen(PORT, () => {
 const test_function = () => {
   const now = moment()
 
-  //cancel existing job run whenever new group added
-  for (const job in schedule.scheduledJobs) schedule.cancelJob(job);
+  cancelAllJobs();
 
   const textEventMessage : TextEventMessage = {
     id: '0',
@@ -588,13 +594,26 @@ const test_function = () => {
     })
   })
 
-    // Scheduler Job
-    const job = schedule.scheduleJob('*/5 * * * * *', 
+}
+
+// Cancel All scheduler jobs
+const cancelAllJobs = () => {
+  for (const job in schedule.scheduledJobs) schedule.cancelJob(job);
+}
+
+// Daily Task 
+const refreshSchedule = () => {
+    // Scheduler Job running every midnight
+    const job = schedule.scheduleJob({hour: 0, minute: 0}, 
     async function(){
-      console.log(new Date())
-      console.log('LOG scheduler')
+      console.log('cancel all jobs and generate new scheduler!')
+      cancelAllJobs();
+      generateSchedule();
   });
 }
 
 // Run on start
-test_function();
+// test_function();
+cancelAllJobs();
+generateSchedule();
+refreshSchedule(); // it would run on loop daily
