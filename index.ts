@@ -590,7 +590,7 @@ const test_function = () => {
 
     schedules.map((item)=>{
       console.log(new Date(item.time * 1000))
-      startReminder(item.name, item.time, groupId, location)
+      startReminder(item.name, item.time, groupId, location, '')
     })
   })
 
