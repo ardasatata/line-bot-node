@@ -541,7 +541,7 @@ const generateSchedule = async () => {
     // Map all prayer time
     PrayerTimings.map(timing => {
       //@ts-ignore
-      startReminder(timing, generatePrayerTimingUnix(response.timmings[timing], response.timezone), group.data().id, group.data().location);
+      startReminder(timing, generatePrayerTimingUnix(response.timmings[timing], response.timezone), group.data().id, group.data().location, response.timezone );
 
       //@ts-ignore
       console.log(example_response.timmings[timing]);
