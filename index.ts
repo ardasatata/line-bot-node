@@ -4,7 +4,7 @@ import { ClientConfig, Client, middleware, MiddlewareConfig, WebhookEvent, TextM
 import express, { Application, Request, response, Response } from 'express';
 import moment from 'moment-timezone';
 import * as admin from 'firebase-admin'; // Firebase Imports
-import { group } from 'console';
+import { Console, group } from 'console';
 import axios, { AxiosResponse } from 'axios'
 
 // Import module
@@ -134,7 +134,7 @@ app.post(
                 `Dhuhr : ${timings.Dhuhr}\n`+
                 `Asr : ${timings.Asr}\n`+
                 `Maghrib : ${timings.Maghrib}\n`+
-                `Isha : ${timings.Isha}\n`,
+                `Isha : ${timings.Isha}`,
             };
             client.replyMessage(replyToken, response)
           }
@@ -145,7 +145,6 @@ app.post(
 
           // Group message type handler
           if(event.source.type=='group'){
-            console.log('this is message type group only')
 
             // command : /register [city] [country] [group-name]
             //       eg: /register zhongli taiwan Musholla-1
@@ -529,6 +528,8 @@ const example_response = {
 
 // Generate prayer time reminder from all groups
 const generateSchedule = async () => {
+  console.log('Generate All scheduler for groups')
+
   // Fetch All groups
   const getGroupData = await db.collection("Groups").get()
   
@@ -542,9 +543,6 @@ const generateSchedule = async () => {
     PrayerTimings.map(timing => {
       //@ts-ignore
       startReminder(timing, generatePrayerTimingUnix(response.timmings[timing], response.timezone), group.data().id, group.data().location, response.timezone );
-
-      //@ts-ignore
-      console.log(example_response.timmings[timing]);
     });
 
     console.log(response);
@@ -598,6 +596,7 @@ const test_function = () => {
 
 // Cancel All scheduler jobs
 const cancelAllJobs = () => {
+  console.log('Cancel All Jobs')
   for (const job in schedule.scheduledJobs) schedule.cancelJob(job);
 }
 
@@ -606,7 +605,7 @@ const refreshSchedule = () => {
     // Scheduler Job running every midnight
     const job = schedule.scheduleJob({hour: 0, minute: 0}, 
     async function(){
-      console.log('cancel all jobs and generate new scheduler!')
+      console.log('Daily Scheduler Refresh')
       cancelAllJobs();
       generateSchedule();
   });
@@ -614,6 +613,8 @@ const refreshSchedule = () => {
 
 // Run on start
 // test_function();
+console.log('Bot Starting...')
 cancelAllJobs();
 generateSchedule();
 refreshSchedule(); // it would run on loop daily
+console.log('Bot Init OK')
