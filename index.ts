@@ -345,6 +345,16 @@ app.get('/cancel-schedule', async (req: Request, res: Response): Promise<Respons
   });
 })
 
+// Print all Scheduler
+app.get('/print-all-job', async (req: Request, res: Response): Promise<Response> =>{
+
+  printAllJobs();
+
+  return res.status(200).json({
+    status: 'success',
+  });
+})
+
 // Test send message to group
 app.get('/test', async (req: Request, res: Response): Promise<Response> =>{
 
@@ -404,6 +414,25 @@ app.get('/test-api-new', async (req: Request, res: Response): Promise<Response> 
   });
 })
 
+// test Unix time
+app.get('/test-time', async (req: Request, res: Response): Promise<Response> =>{
+
+  // generateSchedule();
+
+    const response: PrayerTimesData = await getTodayPrayerData('malang');
+
+    // Map all prayer time
+    PrayerTimings.map(timing => {
+      //@ts-ignore
+      startReminder(timing, generatePrayerTimingUnix(response.timmings[timing], response.timezone), group.data().id, group.data().location, response.timezone );
+    });
+
+  return res.status(200).json({
+    status: 'success',
+    // response
+  });
+})
+
 // Create reminder scheduler/job per prayer time 
 const startReminder = (prayerName: string, timeValue: number, groupId: string, location: string, timezone: string) => {
 
@@ -417,6 +446,9 @@ const startReminder = (prayerName: string, timeValue: number, groupId: string, l
     type: 'text',
     text: `It's time to ${toTitleCase(prayerName)} in ${toTitleCase(location)}\n`+`Time : ${date.toLocaleTimeString( 'en-US' , options )}`
   };
+
+  console.log('Create reminder' + response.text)
+  console.log(timeValue)
 
   // Scheduler Job
   const job = schedule.scheduleJob(new Date(timeValue * 1000), 
@@ -508,6 +540,9 @@ const getTodayPrayerData = async (city: string) => {
 }
 
 const generatePrayerTimingUnix = (prayerTime:string, timezone:string) => {
+  console.log('Generate Unix Time')
+  console.log(prayerTime)
+  console.log(moment.tz(`${moment().format().slice(0, -15)} ${prayerTime}`, timezone).unix());
   return moment.tz(`${moment().format().slice(0, -15)} ${prayerTime}`, timezone).unix()
 }
 
@@ -598,6 +633,15 @@ const test_function = () => {
 const cancelAllJobs = () => {
   console.log('Cancel All Jobs')
   for (const job in schedule.scheduledJobs) schedule.cancelJob(job);
+}
+
+// Print All scheduler jobs
+const printAllJobs = () => {
+  console.log('Print All Jobs')
+  // for (const job in schedule.scheduledJobs) console.log(schedule.scheduledJobs[job]);
+  for (const job in schedule.scheduledJobs) console.log(job);
+
+  // console.log(schedule)
 }
 
 // Daily Task 
