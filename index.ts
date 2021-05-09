@@ -541,12 +541,9 @@ const getTodayPrayerData = async (city: string) => {
 }
 
 const generatePrayerTimingUnix = (prayerTime:string, timezone:string) => {
-  console.log('Generate Unix Time')
-  console.log(prayerTime)
-  console.log(moment.tz(`${moment().format().slice(0, -15)} ${prayerTime}`, timezone).unix());
-  console.log(moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`, timezone).unix());
-  console.log(moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`).unix());
-  return moment.tz(`${moment().format().slice(0, -15)} ${prayerTime}`, timezone).unix()
+  console.log('Generate Unix Time '+ prayerTime)
+  // return moment.tz(`${moment().format().slice(0, -15)} ${prayerTime}`, timezone).unix()
+  return moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`, timezone).unix();
 }
 
 const example_response = {
