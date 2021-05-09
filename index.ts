@@ -414,22 +414,25 @@ app.get('/test-api-new', async (req: Request, res: Response): Promise<Response> 
   });
 })
 
-// test Unix time
-app.get('/test-time', async (req: Request, res: Response): Promise<Response> =>{
+// Test Scheduler at specific time
+app.get('/test-scheduler', async (req: Request, res: Response): Promise<Response> =>{
 
-  // generateSchedule();
+  let time = req.query.time;
+  let timezone = req.query.timezone;
+  let location = req.query.location;
+  let group = req.query.group;
 
-    const response: PrayerTimesData = await getTodayPrayerData('malang');
+    // @ts-ignore
+    const response: PrayerTimesData = await getTodayPrayerData(location);
 
-    // Map all prayer time
-    PrayerTimings.map(timing => {
-      //@ts-ignore
-      startReminder(timing, generatePrayerTimingUnix(response.timmings[timing], response.timezone), group.data().id, group.data().location, response.timezone );
-    });
+    console.log(response)
+
+    // @ts-ignore
+    startReminder('Test-Time', generatePrayerTimingUnix(time, timezone), group, location, timezone );
 
   return res.status(200).json({
     status: 'success',
-    // response
+    response
   });
 })
 
@@ -447,9 +450,6 @@ const startReminder = (prayerName: string, timeValue: number, groupId: string, l
     text: `It's time to ${toTitleCase(prayerName)} in ${toTitleCase(location)}\n`+`Time : ${date.toLocaleTimeString( 'en-US' , options )}`
   };
 
-  console.log('Create reminder' + response.text)
-  console.log(timeValue)
-
   // Scheduler Job
   const job = schedule.scheduleJob(new Date(timeValue * 1000), 
         async function(){
@@ -458,6 +458,7 @@ const startReminder = (prayerName: string, timeValue: number, groupId: string, l
       });
 }
 
+// Check Group id
 const checkGroupId = async (event: WebhookEvent) => {
 
     // @ts-ignore
@@ -650,7 +651,6 @@ const refreshSchedule = () => {
     const job = schedule.scheduleJob({hour: 0, minute: 0}, 
     async function(){
       console.log('Daily Scheduler Refresh')
-      cancelAllJobs();
       generateSchedule();
   });
 }
