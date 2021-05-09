@@ -544,6 +544,8 @@ const generatePrayerTimingUnix = (prayerTime:string, timezone:string) => {
   console.log('Generate Unix Time')
   console.log(prayerTime)
   console.log(moment.tz(`${moment().format().slice(0, -15)} ${prayerTime}`, timezone).unix());
+  console.log(moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`, timezone).unix());
+  console.log(moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`).unix());
   return moment.tz(`${moment().format().slice(0, -15)} ${prayerTime}`, timezone).unix()
 }
 
