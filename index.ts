@@ -544,6 +544,7 @@ const generatePrayerTimingUnix = (prayerTime:string, timezone:string) => {
   console.log('Generate Unix Time '+ prayerTime)
   // return moment.tz(`${moment().format().slice(0, -15)} ${prayerTime}`, timezone).unix()
   console.log(moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`, timezone).unix())
+  console.log(moment.tz(`${moment().format().slice(0, -15)} ${prayerTime}`, timezone).unix())
   return moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`, timezone).unix();
 }
 
@@ -658,7 +659,7 @@ const refreshSchedule = () => {
 // Run on start
 // test_function();
 console.log('Bot Starting...')
-cancelAllJobs();
+// cancelAllJobs();
 generateSchedule();
 refreshSchedule(); // it would run on loop daily
 console.log('Bot Init OK')
