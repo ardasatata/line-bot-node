@@ -451,7 +451,7 @@ const startReminder = (prayerName: string, timeValue: number, groupId: string, l
   };
 
   // Scheduler Job
-  const job = schedule.scheduleJob(new Date(timeValue * 1000), 
+  const job = schedule.scheduleJob(`${response.text} ${timeValue}`,new Date(timeValue * 1000), 
         async function(){
           await client.pushMessage(groupId, response)
           await console.log(response);
@@ -542,7 +542,7 @@ const getTodayPrayerData = async (city: string) => {
 
 const generatePrayerTimingUnix = (prayerTime:string, timezone:string) => {
   console.log('Generate Unix Time '+ prayerTime)
-  // return moment.tz(`${moment().format().slice(0, -15)} ${prayerTime}`, timezone).unix()
+  return moment.tz(`${moment().format().slice(0, -15)} ${prayerTime}`, timezone).unix()
   return moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`, timezone).unix();
 }
 
