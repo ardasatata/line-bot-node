@@ -43,3 +43,19 @@ export const PrayerTimings = [
   'Maghrib',
   'Isha'
 ]
+
+// Debug purpose
+export const example_response = {
+  country: 'Taiwan',
+  timezone: 'Asia/Taipei',
+  timmings: {
+    Imsak: '03:53',
+    Sunrise: '05:22',
+    Fajr: '04:03',
+    Dhuhr: '11:52',
+    Asr: '17:26',
+    Maghrib: '17:28',
+    Isha: '17:30',
+    Midnight: '23:12'
+  }
+}

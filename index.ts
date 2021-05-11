@@ -4,7 +4,7 @@ import { ClientConfig, Client, middleware, MiddlewareConfig, WebhookEvent, TextM
 import express, { Application, Request, response, Response } from 'express';
 import moment from 'moment-timezone';
 import * as admin from 'firebase-admin'; // Firebase Imports
-import { Console, group } from 'console';
+import { Console, group, time } from 'console';
 import axios, { AxiosResponse } from 'axios'
 
 // Import module
@@ -171,7 +171,7 @@ app.post(
                 console.log(response)
                 console.log(replyToken)
 
-                // if add new group succeed cancel all jobs & generate new scheduler
+                // if new group added cancel all jobs & generate new scheduler
                 cancelAllJobs();
                 generateSchedule();
                 refreshSchedule(); // it would run on loop daily
@@ -213,7 +213,6 @@ app.post(
 
 
 import {PRAYER_TIME_NAMES} from './example'
-
 const debugTime = 's'
 
 const generateSchedules = () => {
@@ -451,7 +450,9 @@ const startReminder = (prayerName: string, timeValue: number, groupId: string, l
   };
 
   // Scheduler Job
-  const job = schedule.scheduleJob(`${response.text} ${timeValue}`,new Date(timeValue * 1000), 
+  const job = schedule.scheduleJob(
+    `${toTitleCase(prayerName)} in ${toTitleCase(location)} ${date.toLocaleTimeString( 'en-US' , options )} ${timeValue}`
+    ,new Date(timeValue * 1000), 
         async function(){
           await client.pushMessage(groupId, response)
           await console.log(response);
@@ -540,35 +541,20 @@ const getTodayPrayerData = async (city: string) => {
   return response
 }
 
+// Unix Time Generator
 const generatePrayerTimingUnix = (prayerTime:string, timezone:string) => {
-  console.log('Generate Unix Time '+ prayerTime)
-  // return moment.tz(`${moment().format().slice(0, -15)} ${prayerTime}`, timezone).unix()
-  console.log(moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`, timezone).unix())
-  console.log(moment.tz(timezone).unix())
-  console.log(moment().unix())
-  console.log(moment.tz(`${moment().format().slice(0, -15)} ${prayerTime}`, timezone).unix())
+  // console.log('Generate Unix Time '+ prayerTime)
 
-  if(moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`, timezone).unix() < moment.tz(timezone).unix()){
-    console.log(moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`, timezone).add(1, 'days').unix())
-    return moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`, timezone).add(1, 'days').unix()
+  const currentTime = moment.tz(timezone).unix()
+  const timeValue = moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`, timezone).unix()
+
+  // if scheduler time less than current time add 1 more day
+  if (timeValue < currentTime){
+    const plus1Day = moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`, timezone).add(1, 'days').unix()
+    return plus1Day;
   }
-
-  return moment.tz(`${moment.tz(timezone).format().slice(0, -15)} ${prayerTime}`, timezone).unix();
-}
-
-const example_response = {
-  country: 'Taiwan',
-  timezone: 'Asia/Taipei',
-  timmings: {
-    Imsak: '03:53',
-    Sunrise: '05:22',
-    Fajr: '04:03',
-    Dhuhr: '11:52',
-    Asr: '17:26',
-    Maghrib: '17:28',
-    Isha: '17:30',
-    Midnight: '23:12'
-  }
+  // return normal time value
+  return timeValue;
 }
 
 // Generate prayer time reminder from all groups
@@ -595,6 +581,7 @@ const generateSchedule = async () => {
 
 }
 
+// Register new group
 const registerNewGroup = async (groupItem: GroupItemsType) => {
   return await db.collection('Groups').doc(groupItem.id).set(groupItem);
 }
@@ -604,6 +591,7 @@ app.listen(PORT, () => {
   console.log(`Application is live and listening on port ${PORT}`);
 });
 
+// Test function to send message with scheduler
 const test_function = () => {
   const now = moment()
 
@@ -657,15 +645,14 @@ const printAllJobs = () => {
 // Daily Task 
 const refreshSchedule = () => {
     // Scheduler Job running every midnight
-    const job = schedule.scheduleJob({hour: 0, minute: 0}, 
+    const job = schedule.scheduleJob('Daily Scheduler Refresh',{hour: 0, minute: 0}, 
     async function(){
       console.log('Daily Scheduler Refresh')
       generateSchedule();
   });
 }
 
-// Run on start
-// test_function();
+// *** Run on start
 console.log('Bot Starting...')
 // cancelAllJobs();
 generateSchedule();
