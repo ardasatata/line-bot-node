@@ -115,27 +115,28 @@ app.post(
 
           // eg: /schedule [city] 
           // eg: /schedule taipei
+          // eg: /schedule taoyuan-city
           if(command==='/schedule'){
             
-            // length of command
-            const city:string = text.substring(10)
+            // length of command + remove '-' char change to space
+            const city:string = text.substring(10).replace(/-/g, ' ')
             console.log(`Get schedule for ${toTitleCase(city)}`)
 
             //@ts-ignore
-            const res: Array<any> = await getTodayPrayerSchedule(city)
+            const res: Array<any> = await getTodayPrayerData(city)
             //@ts-ignore
-            const timings: PrayerTimingsType = res;
+            const timings: PrayerTimingsType = res.timmings;
 
             response = {
               type: 'text',
               text: 
-                `Today Prayer Times for ${toTitleCase(city)}\n`+
-                `Fajr : ${timings.Fajr}\n`+
-                `Sunrise : ${timings.Sunrise}\n`+
-                `Dhuhr : ${timings.Dhuhr}\n`+
-                `Asr : ${timings.Asr}\n`+
-                `Maghrib : ${timings.Maghrib}\n`+
-                `Isha : ${timings.Isha}`,
+                `Today Prayer Times for ${toTitleCase(city)} 🕌\n`+
+                `🌄 Fajr : ${timings.Fajr}\n`+
+                `🌅 Sunrise : ${timings.Sunrise}\n`+
+                `☀️ Dhuhr : ${timings.Dhuhr}\n`+
+                `🌆 Asr : ${timings.Asr}\n`+
+                `🌇 Maghrib : ${timings.Maghrib}\n`+
+                `🌃 Isha : ${timings.Isha}`,
             };
             // Send message to LINE
             client.replyMessage(replyToken, response)
@@ -149,7 +150,7 @@ app.post(
           if(event.source.type=='group'){
 
             // command : /register [city] [country] [group-name]
-            //       eg: /register zhongli taiwan Musholla-1
+            //       eg: /register taoyuan-city taiwan Musholla-1
             if(command==='/register'){
               console.log('register command')
               console.log(`location ${textSplit[1]}, group name ${textSplit[2]}`)
@@ -443,16 +444,21 @@ const startReminder = (prayerName: string, timeValue: number, groupId: string, l
   const date = new Date(timeValue * 1000)
 
   const options = {
-    timeZone : timezone
+    timeZone : timezone,
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
   }
 
   const response: TextMessage = {
     type: 'text',
-    text: `It's time to ${toTitleCase(prayerName)} in ${toTitleCase(location)}\n`+`Time : ${date.toLocaleTimeString( 'en-US' , options )}`
+    // @ts-ignore
+    text: `🕌 It's time to ${toTitleCase(prayerName)} in ${toTitleCase(location.replace(/-/g, ' '))}\n`+`Time : ${date.toLocaleTimeString( 'en-US' , options )}`
   };
 
   // Scheduler Job
   const job = schedule.scheduleJob(
+    // @ts-ignore
     `${toTitleCase(prayerName)} in ${toTitleCase(location)} ${date.toLocaleTimeString( 'en-US' , options )} ${timeValue}`
     ,new Date(timeValue * 1000), 
         async function(){
@@ -510,7 +516,7 @@ const checkGroupId = async (event: WebhookEvent) => {
 }
 
 // Get API Pray Zone
-const getTodayPrayerSchedule = async (city: string, school: string = '3') => {
+const getTodayPrayerData = async (city: string, school: string = '3') => {
 
   let prayerTimeData: AxiosResponse<any>;
 
@@ -518,20 +524,6 @@ const getTodayPrayerSchedule = async (city: string, school: string = '3') => {
     params: {
       city: city,
       school: school
-    }
-  })
-
-  return prayerTimeData.data.results.datetime[0].times
-}
-
-// Get API Pray Zone
-const getTodayPrayerData = async (city: string) => {
-
-  let prayerTimeData: AxiosResponse<any>;
-
-  prayerTimeData = await axios.get("https://api.pray.zone/v2/times/today.json", {
-    params: {
-      city: city,
     }
   })
 
