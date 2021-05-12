@@ -119,8 +119,8 @@ app.post(
           if(command==='/schedule'){
             
             // length of command + remove '-' char change to space
-            const city:string = text.substring(10).replace(/-/g, ' ')
-            console.log(`Get schedule for ${toTitleCase(city)}`)
+            const city:string = text.substring(10)
+            console.log(`Get schedule for ${toTitleCase(city.replace(/-/g, ' '))}`)
 
             //@ts-ignore
             const res: Array<any> = await getTodayPrayerData(city)
