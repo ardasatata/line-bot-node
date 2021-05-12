@@ -117,8 +117,9 @@ app.post(
           // eg: /schedule taipei
           if(command==='/schedule'){
             
-            const city = textSplit[1];
-            console.log(`get schedule for ${toTitleCase(city)}`)
+            // length of command
+            const city:string = text.substring(10)
+            console.log(`Get schedule for ${toTitleCase(city)}`)
 
             //@ts-ignore
             const res: Array<any> = await getTodayPrayerSchedule(city)
@@ -136,6 +137,7 @@ app.post(
                 `Maghrib : ${timings.Maghrib}\n`+
                 `Isha : ${timings.Isha}`,
             };
+            // Send message to LINE
             client.replyMessage(replyToken, response)
           }
 
@@ -508,13 +510,14 @@ const checkGroupId = async (event: WebhookEvent) => {
 }
 
 // Get API Pray Zone
-const getTodayPrayerSchedule = async (city: string) => {
+const getTodayPrayerSchedule = async (city: string, school: string = '3') => {
 
   let prayerTimeData: AxiosResponse<any>;
 
   prayerTimeData = await axios.get("https://api.pray.zone/v2/times/today.json", {
     params: {
       city: city,
+      school: school
     }
   })
 
@@ -636,10 +639,7 @@ const cancelAllJobs = () => {
 // Print All scheduler jobs
 const printAllJobs = () => {
   console.log('Print All Jobs')
-  // for (const job in schedule.scheduledJobs) console.log(schedule.scheduledJobs[job]);
   for (const job in schedule.scheduledJobs) console.log(job);
-
-  // console.log(schedule)
 }
 
 // Daily Task 
@@ -647,6 +647,8 @@ const refreshSchedule = () => {
     // Scheduler Job running every midnight
     const job = schedule.scheduleJob('Daily Scheduler Refresh',{hour: 0, minute: 0}, 
     async function(){
+      // Cancel All Jobs before generate new one
+      cancelAllJobs();
       console.log('Daily Scheduler Refresh')
       generateSchedule();
   });
@@ -654,7 +656,6 @@ const refreshSchedule = () => {
 
 // *** Run on start
 console.log('Bot Starting...')
-// cancelAllJobs();
 generateSchedule();
 refreshSchedule(); // it would run on loop daily
 console.log('Bot Init OK')
