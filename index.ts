@@ -459,7 +459,7 @@ const startReminder = (prayerName: string, timeValue: number, groupId: string, l
   // Scheduler Job
   const job = schedule.scheduleJob(
     // @ts-ignore
-    `${toTitleCase(prayerName)} in ${toTitleCase(location)} ${date.toLocaleTimeString( 'en-US' , options )} ${timeValue}`
+    `${toTitleCase(prayerName)} in ${toTitleCase(location)} ${date.toLocaleTimeString( 'en-US' , options )} ${timeValue} ${groupId}`
     ,new Date(timeValue * 1000), 
         async function(){
           await client.pushMessage(groupId, response)
